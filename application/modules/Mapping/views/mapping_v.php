@@ -1,0 +1,1 @@
+<a class = "ui button" href = "<?php echo base_url(); ?>Mapping/newmapping"><i class = "plus square o icon"></i> Create Mapping</a>
