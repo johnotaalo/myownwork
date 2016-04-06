@@ -20,7 +20,7 @@
 	<button class = "small ui right floated button">Save Changes</button>
 	<br/>
 	<br/>
-	<table class = "ui celled table">
+	<table class = "ui celled table mapping_table">
 		<thead>
 			<tr>
 				<th class="center aligned" colspan="3">Tables</th>
@@ -32,7 +32,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr>
+			<tr class = "matching_row">
 				<td class = "field">
 					<div class="ui search selection dropdown">
 						<input type="hidden" name="new_tables">
@@ -56,31 +56,11 @@
 				<td class = "field">
 					<button class = "ui button match">Match Columns</button>
 				</td>
-				<!-- <td class = "field">
-					<div class="ui search selection dropdown">
-						<input type="hidden" name="new_table_columns">
-						<i class="dropdown icon"></i>
-						<div class="default text">Select New Table</div>
-						<div class = "menu" id = "new_table_columns">
-							data comes here 
-						</div>
-					</div>
-				</td>
-				<td class = "field">
-					<div class="ui search selection dropdown">
-						<input type="hidden" name="old_table_columns">
-						<i class="dropdown icon"></i>
-						<div class="default text">Select New Table</div>
-						<div class = "menu" id = "old_table_columns">
-							data comes here 
-						</div>
-					</div>
-				</td> -->
 			</tr>
 		</tbody>
 	</table>
 
-	<button id = "add_row" class = "tiny ui button">Add Row</button>
+	<!-- <button id = "add_row" class = "tiny ui button">Add Row</button> -->
 </form>
 
 <div class="ui modal">
@@ -88,14 +68,14 @@
 	<div class="header">
 		Modal Title
 	</div>
-	<div class="image content">
+	<div class="content">
 		<!-- content -->
 	</div>
 	<div class="actions">
 		<div class="ui black deny button">
 			Cancel
 		</div>
-		<div class="ui positive right labeled icon button">
+		<div id = "continue_button" class="ui positive right labeled icon button">
 			Continue
 		<i class="checkmark icon"></i>
 		</div>
@@ -114,35 +94,6 @@
 		alert( "error" );
 	});
 
-	$('input[name = "new_tables"]').change(function(){
-		var jqxhr = $.get( "<?php echo base_url(); ?>Mapping/create_table_column_select/pims-dev-new/" + $(this).val(), function() {
-			$('div.ui.search.selection.dropdown i').removeClass('dropdown');
-			$('div.ui.search.selection.dropdown i').addClass('spinner loading');
-		})
-		.done(function(data) {
-			$('div.ui.search.selection.dropdown i').removeClass('spinner loading');
-			$('div.ui.search.selection.dropdown i').addClass('dropdown');
-			$('#new_table_columns').html(data);
-		})
-		.fail(function() {
-			alert( "error" );
-		});
-	});
-
-	$('input[name = "old_tables"]').change(function(){
-		var jqxhr = $.get( "<?php echo base_url(); ?>Mapping/create_table_column_select/simon_pims/" + $(this).val(), function() {
-			$('div.ui.search.selection.dropdown i').removeClass('dropdown');
-			$('div.ui.search.selection.dropdown i').addClass('spinner loading');
-		})
-		.done(function(data) {
-			$('div.ui.search.selection.dropdown i').removeClass('spinner loading');
-			$('div.ui.search.selection.dropdown i').addClass('dropdown');
-			$('#old_table_columns').html(data);
-		})
-		.fail(function() {
-			alert( "error" );
-		});
-	});
 
 	$('.match').click(function(){
 
@@ -151,11 +102,34 @@
 
 		if($new_table !== "" && $old_table !== "")
 		{
-			$('.ui.modal').modal('show');
+			$('.ui.modal .content').html('<form id = "mapping_form" method = "POST" action = "<?php echo base_url(); ?>Mapping/add_direct_maps/'+$new_table+'/'+$old_table+'"><table class = "ui table columns_table"><thead><th>New Database ['+$new_table+' table]</th><th>Old Database ['+$old_table+' table]</th></thead><tbody></tbody></table></form>');
+			$.get("<?php echo base_url(); ?>Mapping/create_columns_table/pims-dev-new/" + $new_table + "/simon_pims/"+$old_table, function(data){
+				$('.ui.modal .header').text("Mapping Columns");
+				
+
+				obj = jQuery.parseJSON(data);
+				$('.ui.modal .content .columns_table tbody').html(obj.table);
+				//console.log(data);
+			})
+			.done(function(){
+				$('.ui.modal').modal('show');
+			});
 		}
 		else
 		{
 			alert("ensure the tables have been selected");
 		}
+	});
+
+	$('#add_row').click(function(){
+		$('.matching_row').last().clone().appendTo('.mapping_table tbody');
+	});
+
+	$('#continue_button').click(function(event){
+		form = $('#mapping_form');
+		url = form.attr('action');
+		$.post(url, form.serialize(),function(data){
+			console.log(data);
+		});
 	});
 </script>

@@ -57,7 +57,7 @@ class Mapping extends MY_Controller
 		echo json_encode($select_options);
 	}
 
-	function create_table_column_select($database, $table_name)
+	/*function create_table_column_select($database, $table_name)
 	{
 		$columns = $this->M_Home->get_table_columns($database, $table_name);
 
@@ -69,5 +69,58 @@ class Mapping extends MY_Controller
 		}
 
 		echo $options;
+	}*/
+
+	function create_columns_table($new_database, $new_table_name, $old_database,$old_table_name)
+	{
+		$new_columns = $this->M_Home->get_table_columns($new_database, $new_table_name);
+		$old_columns = $this->M_Home->get_table_columns($old_database, $old_table_name);
+
+		$new_options = $table = $old_options = "";
+
+		if (count($old_columns) > 0) {
+			foreach ($old_columns as $key => $value) {
+				$old_options .= "<option value = '{$value->COLUMN_NAME}'>{$value->COLUMN_NAME}</option>";
+			}
+		}
+
+		if (count($new_columns) > 0) {
+			foreach ($new_columns as $key => $value)
+			{
+				$new_options .= "<option value = '{$value->COLUMN_NAME}'>{$value->COLUMN_NAME}</option>";
+				$table .= "<tr>
+					<td>{$value->COLUMN_NAME}</td>
+					<td class = 'field'><select class = 'ui select dropdown' name = 'old_column_map[{$value->COLUMN_NAME}]'>{$old_options}</select></td>
+				</tr>";
+			}
+		}
+
+		$created_colums = array();
+
+		$created_colums['options']['old_options'] = $old_options;
+		$created_colums['options']['new_options'] = $new_options;
+		$created_colums['table'] = $table;
+
+		echo json_encode($created_colums);
+	}
+
+	function add_direct_maps($new_table, $old_table)
+	{
+		$file = './assets/configurations/config.ini';
+		$json_data = file_get_contents($file);
+		$data_array = array();
+
+		if($json_data != "")
+		{
+			$data_array = json_decode($json_data);
+		}
+
+		$data_array[] = [
+		$new_table . ' - ' . $old_table => $this->input->post('old_column_map')
+		];
+
+		$data = json_encode($data_array);
+		
+		file_put_contents($file, $data);
 	}
 }
